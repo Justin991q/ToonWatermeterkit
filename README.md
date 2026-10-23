@@ -20,6 +20,20 @@ or a cloud account. It is modelled on [toonWater](https://github.com/oepi-loepi/
 - **Settings screen:** you enter the kit's address and your water price, and a **Test verbinding**
   button checks the address.
 
+## Screenshots
+
+The three tiles on the home screen (top left, top middle, bottom left; the P2000 tile is another app):
+
+![The WatermeterKit, Water nu and Water vandaag tiles on the Toon's home screen](screenshots/home.png)
+
+The details screen and the settings screen:
+
+![The details screen: flow, today, average, previous days, meter reading, leak sensor and kit](screenshots/details.png)
+
+![The settings screen: the kit's address, Test verbinding and the water price](screenshots/settings.png)
+
+The screenshots come from the Toon simulator (Toon 2) with sample data.
+
 ## What you need
 
 - A **rooted Toon** (Toon 1 or Toon 2) with the ToonSoftwareCollective (TSC) software, so it can run

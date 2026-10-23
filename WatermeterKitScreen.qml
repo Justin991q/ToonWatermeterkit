@@ -18,7 +18,7 @@ Screen {
 		var days = app.lastDays;
 		if (days.length === 0) return "nog geen";
 		var parts = [];
-		for (var i = days.length - 1; i >= 0; i--) parts.push(days[i]);
+		for (var i = days.length - 1; i >= 0 && parts.length < 5; i--) parts.push(days[i]);   // 5 fit on a Toon 1 too
 		return parts.join("  ") + " l";
 	}
 
@@ -53,7 +53,7 @@ Screen {
 		}
 		SingleLabel {
 			width: labelWidth
-			leftText: "Vorige dagen (nieuwste eerst)"
+			leftText: "Gisteren en eerder"
 			rightText: daysText()
 		}
 		SingleLabel {
