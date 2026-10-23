@@ -1,0 +1,3 @@
+1.0.0
+- first version: flow, today and meter reading from a SmartHomeShop WaterMeterKit or WaterP1MeterKit via the ESPHome REST API
+- water price for the amount in euros
