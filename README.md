@@ -162,9 +162,16 @@ python\python.exe tools\run_tests.py watermeterkit
 | `/mnt/data/tsc/watermeterKit.userSettings.json` | the kit's address, the water price, and which sensor URLs answered |
 | `/mnt/data/tsc/appData/watermeterKit.days.json` | the start of today and the last 7 days |
 
-Every 5 minutes the app also sends its readings to the Toon's own logger (`water_flow` and
-`water_quantity`), the same way toonWater does. The Toon's built-in water graphs only show them once
-water is enabled in the Toon's meter configuration. This app doesn't change that configuration.
+The app also feeds the Toon's built-in water graphs:
+
+- **Hours:** every 5 minutes it logs the flow (`water_flow`).
+- **Days, weeks and months:** these are computed from the meter reading at each full hour
+  (`water_quantity`). The app logs the reading taken when an hour starts as that hour's reading. They
+  fill in from the moment the app runs, with no history from before.
+
+The graphs only appear once water is enabled in the Toon's meter configuration (toonWater can do
+that). This app doesn't change that configuration. When the Toon refuses a reading, the app logs its
+answer once, as `watermeterKit: hcb_rrd refused ...`.
 
 ## Removing
 

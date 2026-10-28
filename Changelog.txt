@@ -1,3 +1,7 @@
+1.0.1
+- day, week and month graphs: the reading at the start of each hour goes into that hour's sample (the Toon overwrites the coming hour's sample, so none were kept)
+- the Toon's answer is logged when it refuses a sample
+
 1.0.0
 - first version: flow, today and meter reading from a SmartHomeShop WaterMeterKit or WaterP1MeterKit via the ESPHome REST API
 - water price for the amount in euros
