@@ -287,6 +287,7 @@ App {
 		}
 		totalLitres = litres;
 		todayLitres = litres - dayStartLitres;
+		newHourReading(litres);
 		connected = true;
 		haveReading = true;
 		lastError = "";
@@ -310,11 +311,35 @@ App {
 
 	///////////////////////////////////////////// Toon logger (hcb_rrd) /////////////////////////////////////////////
 
+	// The Toon's graph app shows hours from water_flow (5min) and days, weeks and months from the meter
+	// readings in water_quantity, which has only the archive 10yrhours: a sample at hh:00 is the reading at
+	// that moment. The Toon's meter driver keeps the coming hour's sample up to date itself, and without a
+	// water meter of its own it writes "no value" there, over ours (toonWater: "the last hour is deleted
+	// when the new hour is set"). So the reading taken when an hour starts goes into that hour's sample,
+	// which the driver leaves alone, written again every 5 minutes.
 	property int rrdLastLitres: -1
+	property int hourSlot: 0                 // the hour (epoch s) hourSlotLitres belongs to
+	property int hourSlotLitres: -1          // the reading at its start, -1 = not known
+	property variant rrdErrors: ({})         // logger/rra -> already logged that the Toon refused it
+
+	function newHourReading(litres) {
+		var now = Math.floor(new Date().getTime() / 1000);
+		var hour = now - now % 3600;
+		if (hour === hourSlot) return;
+		hourSlot = hour;
+		// later than 10 minutes into the hour (the app or the Toon restarted) the reading is not the one
+		// at the start of the hour: leave that hour's sample as it is
+		hourSlotLitres = (now - hour <= 600) ? litres : -1;
+		writeHourSample();
+	}
+
+	function writeHourSample() {
+		if (hourSlotLitres >= 0) rrdSet("water_quantity", "10yrhours", hourSlot, hourSlotLitres);
+	}
 
 	function writeRrd() {
-		// as toonWater: the flow per 5 minutes (as litres per hour) and the meter reading per hour, so the
-		// Toon's own water graphs have data once water is enabled in its meter settings
+		// the flow per 5 minutes (as litres per hour), the reading at the start of this hour, and the
+		// reading now for the coming hour (the Toon's own meters do that too), for the graphs while it lasts
 		if (!haveReading) return;
 		var now = new Date();
 		if (rrdLastLitres >= 0) {
@@ -322,15 +347,24 @@ App {
 			rrdSet("water_flow", "5min", Math.floor(now.getTime() / 1000), perHour);
 		}
 		rrdLastLitres = totalLitres;
-		var nextHour = new Date(now.getTime() + 3600 * 1000);
-		nextHour.setMinutes(0, 0, 0);
-		rrdSet("water_quantity", "10yrhours", Math.floor(nextHour.getTime() / 1000), totalLitres);
+		writeHourSample();
+		rrdSet("water_quantity", "10yrhours", hourSlot + 3600, totalLitres);
 	}
 
 	function rrdSet(logger, rra, epoch, value) {
 		var samples = encodeURIComponent("{\"" + epoch + "\":" + Math.round(value) + "}");
 		var http = new XMLHttpRequest();
 		http.open("GET", "http://localhost/hcb_rrd?action=setRrdData&loggerName=" + logger + "&rra=" + rra + "&samples=" + samples, true);
+		http.onreadystatechange = function() {
+			if (http.readyState !== XMLHttpRequest.DONE) return;
+			// log once per archive when the Toon refuses a sample, with its answer
+			var key = logger + "/" + rra;
+			var refused = http.status !== 200 || http.responseText.indexOf("error") > -1;
+			if (refused && !rrdErrors[key]) console.log("watermeterKit: hcb_rrd refused " + key + ": " + http.status + " " + http.responseText);
+			var errors = rrdErrors;
+			errors[key] = refused;
+			rrdErrors = errors;
+		}
 		http.send();
 	}
 
